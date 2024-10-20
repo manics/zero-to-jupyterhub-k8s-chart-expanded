@@ -1,9 +1,9 @@
 name: Update
 
 on:
-  # schedule:
-  #   # Run at 04:35 every day
-  #   - cron: "35 4 * * *"
+  schedule:
+    # Run at 04:35 every day
+    - cron: "35 4 * * *"
   push:
   workflow_dispatch:
 
