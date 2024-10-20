@@ -47,7 +47,6 @@ def get_z2jh_releases():
 
 
 charts = get_z2jh_releases()
-version = "v0.3.1"
-chart = charts[version]
-if not os.path.exists(version):
-    get_chart("jupyterhub", version, chart)
+for (version, chart) in charts.items():
+    if not os.path.exists(version):
+        get_chart("jupyterhub", version, chart)
