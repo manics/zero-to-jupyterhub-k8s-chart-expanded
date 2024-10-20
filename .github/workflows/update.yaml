@@ -1,0 +1,54 @@
+name: Update
+
+on:
+  # schedule:
+  #   # Run at 04:35 every day
+  #   - cron: "35 4 * * *"
+  push:
+  workflow_dispatch:
+
+jobs:
+  update-jupyterhub:
+    runs-on: ubuntu-24.04
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - run: pip install -r requirements.txt
+
+      - run: python update-charts.py
+
+      # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#multiline-strings
+      - name: Summarise updates
+        id: updates
+        run: |
+          {
+            echo 'updated<<GIT_STATUS_UPDATED'
+            git status -u --porcelain | sed -re 's/^\S+\s+([^/]+).*/\1/' |sort -u
+            echo GIT_STATUS_UPDATED
+          } >> "$GITHUB_OUTPUT"
+
+      # https://github.com/peter-evans/create-pull-request
+      - name: Create a PR
+        uses: peter-evans/create-pull-request@v7
+        # Only commit on main branch, not on forks
+        if: >-
+          (github.ref == 'refs/heads/main') &&
+          github.repository == 'manics/zero-to-jupyterhub-k8s-chart-expanded'
+        with:
+          branch: update-charts
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          commit-message: Update Z2JH charts
+          delete-branch: true
+          title: Update Z2JH charts
+          body: ${{ steps.updates.outputs.GIT_STATUS_UPDATED }}
